@@ -38,7 +38,7 @@ jobs :
         uses : actions/cache@v3
         with :
           key: python-${{ steps.setup-python.outputs.python-version }}-uv-lock-${{ hashFiles('uv.lock') }}-toml-${{ hashFiles('pyproject.toml') }}-uv-0.8.2
-          path: /home/runner/.cache/uv/venv/
+          path: /home/runner/.cache/uv/virtualenvs/
 
       - name : Install dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
