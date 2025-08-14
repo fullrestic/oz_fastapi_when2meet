@@ -67,15 +67,31 @@ jobs :
         with:
           python-version: "3.13"
 
-      - name : Install UV
-        run : |
+      - name: Cache UV
+        id: cache-uv
+        uses: actions/cache@v3
+        with:
+          key: uv-0.8.2
+          path: ~/.local/
+
+      - name: Install UV
+        if: steps.cache-uv.outputs.cache-hit != 'true'
+        run: |
           curl -LsSf https://astral.sh/uv/0.8.2/install.sh | sh
 
       - name : Register UV bin
         run : echo "${HOME}/.uv/bin" >> $GITHUB_PATH
 
-      - name : Install dependencies
-        run : uv sync
+      - name: Cache dependencies
+        id: cache-venv
+        uses: actions/cache@v3
+        with:
+          key: python-${{ steps.setup-python.outputs.python-version }}-uv-lock-${{ hashFiles('uv.lock') }}-toml-${{ hashFiles('pyproject.toml') }}-uv-0.8.2
+          path: $HOME/.cache/uv/venv/
+
+      - name: Install dependencies
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: uv sync
 
       - name: Run tests
         run: |
