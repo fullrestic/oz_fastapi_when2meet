@@ -1,0 +1,67 @@
+name : CI
+
+on :
+  push
+
+jobs :
+  static-analysis:  #mypy, black, ruff 등 정적 분석
+    runs-on : ubuntu-22.04
+    # 실제 프로덕션에서는 모든 버전을 고정하는 게 좋음.
+    # latest로 설정하면 예기치 못하게 버전이 올라가 버그가 발생할 수 있음
+    steps :
+      - name : Check out the codes  # checkout : 가장 최신 브랜치의 가장 최신 커밋 가져옴
+        uses : actions/checkout@v2
+
+      - name : Setup python environment
+        id : setup-python
+        uses : actions/setup-python@v2
+        with :
+          python-version: "3.13"
+
+      - name : Install UV
+        run : |
+          curl -LsSf https://astral.sh/uv/0.8.2/install.sh | sh
+
+      - name : Register UV bin
+        run : echo "${HOME}/.uv/bin" >> $GITHUB_PATH
+
+      - name : Install dependencies
+        run : uv install --no-root
+
+      - name : Run Black
+        run : uv run black . --check  # check만 하고 수정은 안 함
+
+      - name : Run Ruff
+        run : |
+          uv run ruff check --select I
+          uv run ruff check
+
+      - name : Run Mypy
+        run : uv run mypy .
+
+  test :  # 전체 테스트 실행
+    runs-on: ubuntu-22.04
+    steps :
+      - name : Check out the codes
+        uses : actions/checkout@v2
+
+      - name: Setup python environment
+        id: setup-python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.13"
+
+      - name : Install UV
+        run : |
+          curl -LsSf https://astral.sh/uv/0.8.2/install.sh | sh
+
+      - name : Register UV bin
+        run : echo "${HOME}/.uv/bin" >> $GITHUB_PATH
+
+      - name : Install dependencies
+        run : uv install --no-root
+
+      - name: Run tests
+        run: |
+          uv run coverage run -m pytest .
+          uv run coverage report -m
