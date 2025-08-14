@@ -20,7 +20,7 @@ jobs :
 
       - name : Cache UV
         id : cache-uv
-        uses : actions/cache@v2
+        uses : actions/cache@v3
         with :
           key: uv-0.8.2
           path : ~/.local/
@@ -35,7 +35,7 @@ jobs :
 
       - name : Cache dependencies
         id : cache-venv
-        uses : actions/cache@v2
+        uses : actions/cache@v3
         with :
           key: python-${{ steps.setup-python.outputs.python-version }}-uv-lock-${{ hashFiles('uv.lock') }}-toml-${{ hashFiles('pyproject.toml') }}-uv-0.8.2
           path: /home/runner/.cache/uv/venv/
