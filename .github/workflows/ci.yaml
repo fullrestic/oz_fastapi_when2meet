@@ -26,7 +26,7 @@ jobs :
         run : echo "${HOME}/.uv/bin" >> $GITHUB_PATH
 
       - name : Install dependencies
-        run : uv pip install --no-root
+        run : uv pip sync
 
       - name : Run Black
         run : uv run black . --check  # check만 하고 수정은 안 함
@@ -59,7 +59,7 @@ jobs :
         run : echo "${HOME}/.uv/bin" >> $GITHUB_PATH
 
       - name : Install dependencies
-        run : uv pip install --no-root
+        run : uv pip install
 
       - name: Run tests
         run: |
