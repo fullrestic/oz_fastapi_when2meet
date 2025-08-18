@@ -1,4 +1,5 @@
 import string
+import uuid
 from typing import Final
 
 
@@ -22,3 +23,4 @@ class Base62:
 
 # print(Base62.encode(62))    # "ab"
 # print(Base62.encode(124))   # "ac"
+print(Base62.encode(uuid.uuid4().int))
