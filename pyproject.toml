@@ -3,28 +3,10 @@ name = "when2meet"
 version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.13"
-dependencies = [
-    "aerich==0.8.1",
-    "cryptography==44.0.0",
-    "edgedb==2.2.0",
-    "fastapi>=0.116.1",
-    "httpx==0.28.1",
-    "orjson==3.10.12",
-    "pydantic-settings==2.7.1",
-    "tomlkit==0.13.2",
-    "tortoise-orm[asyncmy]==0.23.0",
-    "uvicorn>=0.35.0",
-]
+dependencies = ["aerich==0.8.1", "cryptography==44.0.0", "edgedb==2.2.0", "fastapi>=0.116.1", "httpx==0.28.1", "orjson==3.10.12", "pydantic-settings==2.7.1", "tomlkit==0.13.2", "tortoise-orm[asyncmy]==0.23.0", "uvicorn>=0.35.0"]
 
 [dependency-groups]
-dev = [
-    "black==24.10.0",
-    "coverage==7.6.9",
-    "mypy==1.13.0",
-    "pytest==8.3.4",
-    "pytest-asyncio==0.25.0",
-    "ruff==0.8.2",
-]
+dev = ["black==24.10.0", "coverage==7.6.9", "mypy==1.13.0", "pytest==8.3.4", "pytest-asyncio==0.25.0", "ruff==0.8.2"]
 
 [tool.black]
 line-length = 120
@@ -38,8 +20,13 @@ python_version = 3.13
 strict = true
 
 [tool.coverage.run]
-#omit = ["*/test_*.py"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
+filterwarnings = ['ignore::DeprecationWarning']
+
+[tool.aerich]
+tortoise_orm = "app.configs.tortoise_config.TORTOISE_ORM"
+location = "./migrations"
+src_folder = "./."
