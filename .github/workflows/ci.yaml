@@ -93,6 +93,9 @@ jobs :
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: uv sync
 
+      - name : Setup edgedb
+        uses: edgedb/setup-edgedb@v1
+
       - name: Run tests
         run: |
           uv run coverage run -m pytest .
