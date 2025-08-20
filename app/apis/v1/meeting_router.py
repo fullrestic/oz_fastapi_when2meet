@@ -29,6 +29,7 @@ async def api_create_meeting_mysql() -> CreateMeetingResponse:
 async def api_get_meeting_edgedb(meeting_url_code: str) -> GetMeetingResponse:  # path variable type 정의
     return GetMeetingResponse(url_code="abc")
 
+
 @mysql_router.get(
     "/{meeting_url_code}",  # path variable - api 경로로부터 변수를 받아들임
     description="meeting을 조회합니다.",
