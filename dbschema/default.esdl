@@ -10,6 +10,14 @@ module default {
         required url_code: str{
             constraint exclusive;   # sql의 unique
             readonly := true
-        }
+        };
+        start_date -> cal::local_date;
+        end_date -> cal::local_date;
+        required title: str{
+            default := "";
+        };
+        required location: str{
+            default := ""
+        };
     }
 }
