@@ -22,12 +22,12 @@ async def get_meeting_by_url_code(
         FullMeeting | None,
         await executor.query_single(
             """\
-        with
-            url_code := <str>$url_code,
-        select Meeting { url_code }
-        filter .url_code = url_code
-        limit 1\
-        """,
+            with
+                url_code := <str>$url_code,
+            select Meeting { url_code, start_date, end_date, title, location }
+            filter .url_code = url_code
+            limit 1\
+            """,
             url_code=url_code,
         ),
     )
