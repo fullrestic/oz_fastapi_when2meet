@@ -18,7 +18,7 @@ class UpdateMeetingDateRangeRequest(BaseModel):
 
 class UpdateMeetingTitleRequest(BaseModel):
     model_config = FROZEN_CONFIG
-    title: str | None = None
+    title: str
 
 
 class UpdateMeetingLocationRequest(BaseModel):
