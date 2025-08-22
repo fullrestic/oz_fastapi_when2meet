@@ -18,7 +18,7 @@ class CreateParticipantMysqlResponse(BaseModel):
     participant_dates: list[ParticipantMysql]
 
 
-class ParticipantEdgedb(BaseModel):
+class ParticipantDateEdgedb(BaseModel):
     model_config = FROZEN_CONFIG
     id: uuid.UUID
     date: datetime.date
@@ -27,4 +27,4 @@ class ParticipantEdgedb(BaseModel):
 class CreateParticipantEdgedbResponse(BaseModel):
     model_config = FROZEN_CONFIG
     participant_id: uuid.UUID
-    participant_dates: list[ParticipantEdgedb]
+    participant_dates: list[ParticipantDateEdgedb]
