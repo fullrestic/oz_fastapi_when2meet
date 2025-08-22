@@ -8,8 +8,6 @@ from starlette.status import (
 from app.dtos.create_meeting_response import CreateMeetingResponse
 from app.dtos.get_meeting_response import (
     GetMeetingResponse,
-    ParticipantDateResponse,
-    ParticipantResponse,
 )
 from app.dtos.update_meeting_request import (
     MEETING_DATE_MAX_RANGE,
@@ -60,21 +58,7 @@ async def api_get_meeting_edgedb(meeting_url_code: str) -> GetMeetingResponse:  
             status_code=HTTP_404_NOT_FOUND,
             detail=f"meeting with url_code: {meeting_url_code} not found",
         )
-    return GetMeetingResponse(
-        url_code=meeting_url_code,
-        end_date=meeting.end_date,
-        start_date=meeting.start_date,
-        title=meeting.title,
-        location=meeting.location,
-        participants=[
-            ParticipantResponse(
-                id=p.id,
-                name=p.name,
-                dates=[ParticipantDateResponse(date=pd.date, id=pd.id) for pd in p.dates],
-            )
-            for p in meeting.participants
-        ],
-    )
+    return GetMeetingResponse.from_edgedb(meeting)
 
 
 @mysql_router.get(
@@ -87,14 +71,7 @@ async def api_get_meeting_mysql(meeting_url_code: str) -> GetMeetingResponse:
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND, detail=f"meeting with url_code: {meeting_url_code} not found"
         )
-    return GetMeetingResponse(
-        url_code=meeting.url_code,
-        end_date=meeting.end_date,
-        start_date=meeting.start_date,
-        title=meeting.title,
-        location=meeting.location,
-        participants=[],
-    )
+    return GetMeetingResponse.from_mysql(meeting)
 
 
 @edgedb_router.patch(
@@ -188,21 +165,7 @@ async def api_update_meeting_date_range_edgedb(
         meeting_url_code, update_meeting_date_range_request.start_date, update_meeting_date_range_request.end_date
     )
     assert meeting_after_update
-    return GetMeetingResponse(
-        url_code=meeting_after_update.url_code,
-        end_date=meeting_after_update.end_date,
-        start_date=meeting_after_update.start_date,
-        title=meeting_after_update.title,
-        location=meeting_after_update.location,
-        participants=[
-            ParticipantResponse(
-                id=p.id,
-                name=p.name,
-                dates=[ParticipantDateResponse(date=pd.date, id=pd.id) for pd in p.dates],
-            )
-            for p in meeting_after_update.participants
-        ],
-    )
+    return GetMeetingResponse.from_edgedb(meeting_after_update)
 
 
 @mysql_router.patch("/{meeting_url_code}/date_range", description="meeting 의 날짜 range 를 설정합니다.")
@@ -229,11 +192,4 @@ async def api_update_meeting_date_range_mysql(
         meeting_url_code, update_meeting_date_range_request.start_date, update_meeting_date_range_request.end_date
     )
     assert meeting_after_update  # meeting 삭제 기능은 없으므로 meeting_after_update 는 무조건 있습니다.
-    return GetMeetingResponse(
-        url_code=meeting_after_update.url_code,
-        start_date=meeting_after_update.start_date,
-        end_date=meeting_after_update.end_date,
-        title=meeting_after_update.title,
-        location=meeting_after_update.location,
-        participants=[],
-    )
+    return GetMeetingResponse.from_mysql(meeting_after_update)
