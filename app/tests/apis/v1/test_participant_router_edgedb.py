@@ -1,7 +1,13 @@
 import datetime
+import uuid
 
 import httpx
-from starlette.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from starlette.status import (
+    HTTP_200_OK,
+    HTTP_204_NO_CONTENT,
+    HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
+)
 
 from app import app
 from app.utils.edge import edgedb_client
@@ -98,3 +104,56 @@ async def test_can_not_create_participant_meeting_range_not_set() -> None:
     # Then
     assert create_participant_response.status_code == HTTP_400_BAD_REQUEST
     assert create_participant_response.json() == {"detail": "미팅의 시작일과 종료일이 모두 지정되어 있어야 합니다."}
+
+
+async def test_delete_participant() -> None:
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+        # Given
+        create_meeting_response = await client.post(
+            url="/v1/edgedb/meetings",
+        )
+        url_code = create_meeting_response.json()["url_code"]
+
+        await client.patch(
+            url=f"/v1/edgedb/meetings/{url_code}/date_range",
+            json={
+                "start_date": "2025-12-01",
+                "end_date": "2025-12-07",
+            },
+        )
+
+        create_participant_response = await client.post(
+            url="/v1/edgedb/participants",
+            json={
+                "name": "test_name",
+                "meeting_url_code": url_code,
+            },
+        )
+        participant_id = create_participant_response.json()["participant_id"]
+
+        # When
+        delete_participant_response = await client.delete(
+            url=f"/v1/edgedb/participants/{participant_id}",
+        )
+    # Then
+    assert delete_participant_response.status_code == HTTP_204_NO_CONTENT
+    deleted_participant = await edgedb_client.query_single(
+        f"SELECT Participant {{id}} FILTER .id=<uuid>'{participant_id}'"
+    )
+    assert deleted_participant is None
+    deleted_participant_dates = await edgedb_client.query(
+        f"SELECT ParticipantDate {{id}} FILTER .participant.id=<uuid>'{participant_id}'"
+    )
+    assert deleted_participant_dates == []
+
+
+async def test_delete_participant_does_not_exist() -> None:
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+        delete_participant_response = await client.delete(
+            url=f"/v1/edgedb/participants/{(participant_id_doesn_not_exist := uuid.uuid4())}",
+        )
+
+    assert delete_participant_response.status_code == HTTP_404_NOT_FOUND
+    assert delete_participant_response.json() == {
+        "detail": f"participant_id: {participant_id_doesn_not_exist} 은 없습니다."
+    }

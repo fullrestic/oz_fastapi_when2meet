@@ -1,3 +1,4 @@
+import uuid
 from datetime import date, timedelta
 
 from app.dtos.create_participant_request import CreateParticipantRequest
@@ -8,6 +9,10 @@ from app.queries.participant.bulk_create_participant_date_async_edgeql import (
 from app.queries.participant.create_participant_async_edgeql import (
     CreateParticipantResult,
     create_participant,
+)
+from app.queries.participant.delete_participant_async_edgeql import (
+    DeleteParticipantResult,
+    delete_participant,
 )
 from app.utils.edge import edgedb_client
 
@@ -35,3 +40,9 @@ async def service_create_participant_edgedb(
     return participant, [
         ParticipantDateEdgedb(id=id_, date=date) for id_, date in zip([date.id for date in dates_result], default_dates)
     ]
+
+
+async def service_delete_participant_edgedb(
+    participant_id: uuid.UUID,
+) -> DeleteParticipantResult | None:
+    return await delete_participant(edgedb_client, participant_id=participant_id)
