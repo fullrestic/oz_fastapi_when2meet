@@ -47,9 +47,7 @@ async def api_create_participant_edgedb(
 async def api_create_participant_mysql(
     create_participant_request: CreateParticipantRequest,
 ) -> CreateParticipantMysqlResponse:
-    meeting = await service_get_meeting_mysql(
-        create_participant_request.meeting_url_code
-    )
+    meeting = await service_get_meeting_mysql(create_participant_request.meeting_url_code)
 
     if not meeting:
         raise HTTPException(
@@ -60,7 +58,7 @@ async def api_create_participant_mysql(
     if not (meeting.start_date and meeting.end_date):
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
-            detail=f"start and end should be set.",
+            detail="start and end should be set.",
         )
 
     participant, participant_dates = await service_create_participant(
@@ -71,7 +69,5 @@ async def api_create_participant_mysql(
 
     return CreateParticipantMysqlResponse(
         participant_id=participant.id,
-        participant_dates=[
-            ParticipantDateMysql(id=pd.id, date=pd.date) for pd in participant_dates
-        ],
+        participant_dates=[ParticipantDateMysql(id=pd.id, date=pd.date) for pd in participant_dates],
     )

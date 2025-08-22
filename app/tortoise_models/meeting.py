@@ -10,6 +10,7 @@ from app.tortoise_models.base_model import BaseModel
 if TYPE_CHECKING:
     from app.tortoise_models.participant import ParticipantModel
 
+
 class MeetingModel(BaseModel, Model):
     url_code = fields.CharField(max_length=255, unique=True)
     title = fields.CharField(max_length=255, default="")

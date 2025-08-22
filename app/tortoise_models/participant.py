@@ -10,6 +10,7 @@ from app.tortoise_models.meeting import MeetingModel
 if TYPE_CHECKING:
     from app.tortoise_models.participant_date import ParticipantDateModel
 
+
 class ParticipantModel(BaseModel, Model):
     name = fields.CharField(max_length=255)
     meeting: fields.ForeignKeyRelation[MeetingModel] = fields.ForeignKeyField(

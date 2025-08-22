@@ -76,7 +76,7 @@ class TestMeetingRouter(TestCase):
                 "2025-12-05",
                 "2025-12-06",
                 "2025-12-07",
-            ]
+            ],
         )
 
     async def test_api_get_meeting_mysql_404(self) -> None:
