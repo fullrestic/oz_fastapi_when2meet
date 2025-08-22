@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from fastapi import APIRouter, HTTPException
 from starlette.status import (
     HTTP_204_NO_CONTENT,
@@ -22,7 +20,13 @@ from app.services.meeting_service_edgedb import (
     service_update_meeting_location_edgedb,
     service_update_meeting_title_edgedb,
 )
-from app.services.meeting_service_mysql import service_create_meeting_mysql
+from app.services.meeting_service_mysql import (
+    service_create_meeting_mysql,
+    service_get_meeting_mysql,
+    service_update_meeting_date_range_mysql,
+    service_update_meeting_location_mysql,
+    service_update_meeting_title_mysql,
+)
 
 # DB 두가지 사용
 edgedb_router = APIRouter(prefix="/v1/edgedb/meetings", tags=["Meeting"])
@@ -61,6 +65,25 @@ async def api_get_meeting_edgedb(meeting_url_code: str) -> GetMeetingResponse:  
     )
 
 
+@mysql_router.get(
+    "/{meeting_url_code}",  # path variable
+    description="meeting 을 조회합니다.",
+)
+async def api_get_meeting_mysql(meeting_url_code: str) -> GetMeetingResponse:
+    meeting = await service_get_meeting_mysql(meeting_url_code)
+    if meeting is None:
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND, detail=f"meeting with url_code: {meeting_url_code} not found"
+        )
+    return GetMeetingResponse(
+        url_code=meeting.url_code,
+        end_date=meeting.end_date,
+        start_date=meeting.start_date,
+        title=meeting.title,
+        location=meeting.location,
+    )
+
+
 @edgedb_router.patch(
     "/{meeting_url_code}/title",
     description="meeting 의 title 을 설정합니다.",
@@ -86,6 +109,12 @@ async def api_update_meeting_title_edgedb(
 async def api_update_meeting_title_mysql(
     meeting_url_code: str, update_meeting_title_request: UpdateMeetingTitleRequest
 ) -> None:
+    updated = await service_update_meeting_title_mysql(meeting_url_code, update_meeting_title_request.title)
+    if not updated:
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND,
+            detail=f"meeting with url_code: {meeting_url_code} not found",
+        )
     return None
 
 
@@ -114,21 +143,13 @@ async def api_update_meeting_location_edgedb(
 async def api_update_meeting_location_mysql(
     meeting_url_code: str, update_meeting__location_request: UpdateMeetingLocationRequest
 ) -> None:
+    updated = await service_update_meeting_location_mysql(meeting_url_code, update_meeting__location_request.location)
+    if not updated:
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND,
+            detail=f"meeting with url_code: {meeting_url_code} not found",
+        )
     return None
-
-
-@mysql_router.get(
-    "/{meeting_url_code}",  # path variable - api 경로로부터 변수를 받아들임
-    description="meeting을 조회합니다.",
-)
-async def api_get_meeting_mysql(meeting_url_code: str) -> GetMeetingResponse:  # path variable type 정의
-    return GetMeetingResponse(
-        url_code=meeting_url_code,
-        end_date=datetime.now().date(),
-        start_date=datetime.now().date(),
-        title="test",
-        location="test",
-    )
 
 
 @edgedb_router.patch("/{meeting_url_code}/date_range", description="meeting의 날짜 range 를 설정합니다.")
@@ -158,6 +179,39 @@ async def api_update_meeting_date_range_edgedb(
         url_code=meeting_after_update.url_code,
         end_date=meeting_after_update.end_date,
         start_date=meeting_after_update.start_date,
+        title=meeting_after_update.title,
+        location=meeting_after_update.location,
+    )
+
+
+@mysql_router.patch("/{meeting_url_code}/date_range", description="meeting 의 날짜 range 를 설정합니다.")
+async def api_update_meeting_date_range_mysql(
+    meeting_url_code: str, update_meeting_date_range_request: UpdateMeetingDateRangeRequest
+) -> GetMeetingResponse:
+    if update_meeting_date_range_request.exceeds_max_range():
+        raise HTTPException(
+            status_code=HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"start {update_meeting_date_range_request.start_date} and end {update_meeting_date_range_request.end_date} should be within {MEETING_DATE_MAX_RANGE.days} days",
+        )
+    meeting_before_update = await service_get_meeting_mysql(meeting_url_code)
+
+    if meeting_before_update is None:
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND, detail=f"meeting with url_code: {meeting_url_code} not found"
+        )
+    if meeting_before_update.start_date or meeting_before_update.end_date:
+        raise HTTPException(
+            status_code=HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"meeting: {meeting_url_code} start: {meeting_before_update.start_date} end: {meeting_before_update.end_date} are already set",
+        )
+    meeting_after_update = await service_update_meeting_date_range_mysql(
+        meeting_url_code, update_meeting_date_range_request.start_date, update_meeting_date_range_request.end_date
+    )
+    assert meeting_after_update  # meeting 삭제 기능은 없으므로 meeting_after_update 는 무조건 있습니다.
+    return GetMeetingResponse(
+        url_code=meeting_after_update.url_code,
+        start_date=meeting_after_update.start_date,
+        end_date=meeting_after_update.end_date,
         title=meeting_after_update.title,
         location=meeting_after_update.location,
     )
