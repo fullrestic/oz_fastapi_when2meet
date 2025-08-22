@@ -34,7 +34,7 @@ module default {
             on target delete delete source;
         }
         constraint exclusive on ((.date, .participant));
-        required storred -> bool{
+        required starred -> bool{
             default := false;
         }
         required enabled -> bool{

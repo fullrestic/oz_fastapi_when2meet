@@ -41,6 +41,24 @@ async def test_api_get_meeting() -> None:
         )
         url_code = create_meeting_response.json()["url_code"]
 
+        await client.patch(
+            url=f"/v1/edgedb/meetings/{url_code}/date_range",
+            json={
+                "start_date": (start_date := "2025-12-01"),
+                "end_date": (end_date := "2025-12-07"),
+            },
+        )
+
+        await client.post(
+            url="/v1/edgedb/participants",
+            json={
+                "name": (participant_name := "test_name"),
+                "meeting_url_code": url_code,
+            },
+        )
+
+        await client.patch(f"/v1/edgedb/meetings/{url_code}/title", json={"title": (title := "abc")})
+
         # When
         response = await client.get(
             url=f"/v1/edgedb/meetings/{url_code}",
@@ -50,10 +68,22 @@ async def test_api_get_meeting() -> None:
     assert response.status_code == HTTP_200_OK
     response_body = response.json()
     assert response_body["url_code"] == url_code
-    assert response_body["start_date"] is None
-    assert response_body["end_date"] is None
-    assert response_body["title"] == ""
+    assert response_body["start_date"] == start_date
+    assert response_body["end_date"] == end_date
+    assert response_body["title"] == title
     assert response_body["location"] == ""
+    assert len(response_body["participants"]) == 1
+    participant = response_body["participants"][0]
+    assert participant["name"] == participant_name
+    assert [date["date"] for date in participant["dates"]] == [
+        "2025-12-01",
+        "2025-12-02",
+        "2025-12-03",
+        "2025-12-04",
+        "2025-12-05",
+        "2025-12-06",
+        "2025-12-07",
+    ]
 
 
 async def test_api_get_meeting_404() -> None:
