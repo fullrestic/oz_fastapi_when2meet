@@ -12,6 +12,12 @@ from app.services.meeting_service_edgedb import (
     service_get_meeting_edgedb,
 )
 from app.services.meeting_service_mysql import service_get_meeting_mysql
+from app.services.participant_date_service_edgedb import (
+    service_star_participant_date_edgedb,
+    service_turn_off_participant_date_edgedb,
+    service_turn_on_participant_date_edgedb,
+    service_unstar_participant_date_edgedb,
+)
 
 edgedb_router = APIRouter(prefix="/v1/edgedb/participant_dates", tags=["ParticipantDate"])
 mysql_router = APIRouter(prefix="/v1/mysql/participant_dates", tags=["ParticipantDate"])
@@ -24,6 +30,7 @@ mysql_router = APIRouter(prefix="/v1/mysql/participant_dates", tags=["Participan
 async def api_turn_on_date_edgedb(
     turn_on_participant_day_request: TurnOnOffStarParticipantDateRequestEdgedb,
 ) -> GetMeetingResponse:
+    await service_turn_on_participant_date_edgedb(turn_on_participant_day_request.participant_date_id)
     meeting = await service_get_meeting_edgedb(turn_on_participant_day_request.meeting_url_code)
     if meeting is None:
         raise HTTPException(
@@ -40,6 +47,7 @@ async def api_turn_on_date_edgedb(
 async def api_turn_off_date_edgedb(
     turn_off_participant_day_request: TurnOnOffStarParticipantDateRequestEdgedb,
 ) -> GetMeetingResponse:
+    await service_turn_off_participant_date_edgedb(turn_off_participant_day_request.participant_date_id)
     meeting = await service_get_meeting_edgedb(turn_off_participant_day_request.meeting_url_code)
     if meeting is None:
         raise HTTPException(
@@ -88,6 +96,7 @@ async def api_turn_off_date_mysql(
 async def api_star_date_edgedb(
     star_participant_day_request: TurnOnOffStarParticipantDateRequestEdgedb,
 ) -> GetMeetingResponse:
+    await service_star_participant_date_edgedb(star_participant_day_request.participant_date_id)
     meeting = await service_get_meeting_edgedb(star_participant_day_request.meeting_url_code)
     if meeting is None:
         raise HTTPException(
@@ -104,6 +113,7 @@ async def api_star_date_edgedb(
 async def api_unstar_date_edgedb(
     unstar_participant_day_request: TurnOnOffStarParticipantDateRequestEdgedb,
 ) -> GetMeetingResponse:
+    await service_unstar_participant_date_edgedb(unstar_participant_day_request.participant_date_id)
     meeting = await service_get_meeting_edgedb(unstar_participant_day_request.meeting_url_code)
     if meeting is None:
         raise HTTPException(
