@@ -11,18 +11,20 @@ from app.tortoise_models.participant import ParticipantModel
 
 class ParticipantDateModel(BaseModel, Model):
     participant: fields.ForeignKeyRelation[ParticipantModel] = fields.ForeignKeyField(
-        "models.ParticipantModel", related_name="participant_dates", db_constraint=False, index=True
+        "models.ParticipantModel",
+        related_name="participant_dates",
+        db_constraint=False,
+        index=True,
     )
     date = fields.DateField()
     enabled = fields.BooleanField(default=True)
     starred = fields.BooleanField(default=False)
-    participants: list[ParticipantModel]
 
     class Meta:
         table = "participant_dates"
 
     @classmethod
-    async def bulk_create_participant_date(cls, participant_id: int, dates: list[datetime.date]) -> None:
+    async def bulk_create_participant_dates(cls, participant_id: int, dates: list[datetime.date]) -> None:
         await cls.bulk_create([ParticipantDateModel(participant_id=participant_id, date=date) for date in dates])
 
     @classmethod
@@ -33,3 +35,20 @@ class ParticipantDateModel(BaseModel, Model):
             .order_by("date")
             .all()
         )
+
+    # 이 밑으로 4개 메소드 추가!
+    @classmethod
+    async def on(cls, participant_date_id: int) -> None:
+        await cls.filter(id=participant_date_id).update(enabled=True)
+
+    @classmethod
+    async def off(cls, participant_date_id: int) -> None:
+        await cls.filter(id=participant_date_id).update(enabled=False, starred=False)
+
+    @classmethod
+    async def star(cls, participant_date_id: int) -> None:
+        await cls.filter(id=participant_date_id).update(enabled=True, starred=True)
+
+    @classmethod
+    async def unstar(cls, participant_date_id: int) -> None:
+        await cls.filter(id=participant_date_id).update(starred=False)
